@@ -997,9 +997,11 @@
         <h2>Get our free guide: 7 Things Every Nigerian Should Know Before Buying Land</h2>
         <p>Subscribe for the free guide, new estate launches, and honest market insights straight to your inbox. No spam, unsubscribe anytime.</p>
       </div>
-      <form class="nb-form" id="newsletterForm" action="https://formspree.io/f/mvzepykg" method="POST">
-        <input type="hidden" name="form-type" value="Newsletter / Free Guide Request">
-        <input type="email" name="email" id="nb-email" placeholder="Your email address" required>
+      <form class="nb-form" id="newsletterForm" action="https://0e03892c.sibforms.com/serve/MUIFADPc0qJqstXJStRS6dx922N7zOnrf2Vmn-PeL8nEj374y2KPfw55WpqsgXPbLoJeUZzUIt0TXIOYlGuQBxGTIxtirYL97Ff6Pyzfrh9YO79HfrbjWmFLvbWu6KWD8BnmwUR5Q7YZuT-o2g08GBUuC7pcvwPe0nLX_lmO2vO0Q2Ifuo0xbAKfNdl7hb5XPQT6sKt8YOzkQcCtAg==" method="POST">
+        <input type="text" name="FIRSTNAME" id="nb-name" placeholder="Your full name" required>
+        <input type="email" name="EMAIL" id="nb-email" placeholder="Your email address" required>
+        <input type="hidden" name="email_address_check" value="">
+        <input type="hidden" name="locale" value="en">
         <button type="submit">Subscribe & Get The Guide</button>
       </form>
     </div>
@@ -1010,7 +1012,12 @@
       <div class="eyebrow" style="justify-content:center;">Ready When You Are</div>
       <h2 class="reveal">Your plot is waiting. Let's go see it.</h2>
       <p class="reveal">Book a free inspection this week and speak with a real member of our team, no pressure, no jargon.</p>
-      <form class="lead-form reveal" id="inspectionForm" action="https://formspree.io/f/mvzepykg" method="POST">
+      <iframe name="inspectionFrame" id="inspectionFrame" title="Form response" style="display:none;width:0;height:0;border:0;"></iframe>
+      <form class="lead-form reveal" id="inspectionForm" action="https://formsubmit.co/info@landzerocsl.com.ng" method="POST" enctype="multipart/form-data" target="inspectionFrame">
+        <input type="hidden" name="_subject" value="New inspection booking - Landzero website">
+        <input type="hidden" name="_template" value="table">
+        <input type="hidden" name="_captcha" value="false">
+        <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
         <div class="form-row"><label for="lf-name">Full Name</label><input type="text" id="lf-name" name="name" placeholder="e.g. Adaeze Okafor" required></div>
         <div class="form-row"><label for="lf-phone">Phone Number</label><input type="tel" id="lf-phone" name="phone" placeholder="e.g. 0803 123 4567" required></div>
         <div class="form-row">
@@ -1727,7 +1734,12 @@
         </a>
       </div>
 
-      <form class="contact-form reveal reveal-delay-1" id="contactPageForm" action="https://formspree.io/f/mvzepykg" method="POST">
+      <iframe name="contactFrame" id="contactFrame" title="Form response" style="display:none;width:0;height:0;border:0;"></iframe>
+      <form class="contact-form reveal reveal-delay-1" id="contactPageForm" action="https://formsubmit.co/info@landzerocsl.com.ng" method="POST" enctype="multipart/form-data" target="contactFrame">
+        <input type="hidden" name="_subject" value="New contact message - Landzero website">
+        <input type="hidden" name="_template" value="table">
+        <input type="hidden" name="_captcha" value="false">
+        <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
         <div class="form-row"><label for="cf-name">Full Name</label><input type="text" id="cf-name" name="name" placeholder="e.g. Adaeze Okafor" required></div>
         <div class="form-row"><label for="cf-email">Email</label><input type="email" id="cf-email" name="email" placeholder="e.g. you@email.com" required></div>
         <div class="form-row"><label for="cf-phone">Phone Number</label><input type="tel" id="cf-phone" name="phone" placeholder="e.g. 0803 123 4567" required></div>
@@ -2124,9 +2136,48 @@
       });
     });
   }
-  wireFormToFormspree(document.getElementById('inspectionForm'));
-  wireFormToFormspree(document.getElementById('contactPageForm'));
-  wireFormToFormspree(document.getElementById('newsletterForm'));
+  // Inspection + Contact forms: sent by email to info@ via FormSubmit (hidden frame keeps the visitor on the page)
+  function wireEmailForm(form, frame){
+    if(!form || !frame) return;
+    const btn = form.querySelector('button[type=submit]');
+    const original = btn.textContent;
+    let sending = false, timer = null;
+    function reset(){ btn.disabled = false; btn.textContent = original; btn.style.background = ''; }
+    form.addEventListener('submit', () => {
+      sending = true; btn.disabled = true; btn.textContent = 'Sending...';
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if(!sending) return;
+        sending = false; btn.textContent = 'Something went wrong, try WhatsApp instead'; btn.style.background = '#D33';
+        setTimeout(reset, 3500);
+      }, 40000);
+    });
+    frame.addEventListener('load', () => {
+      if(!sending) return;
+      sending = false; clearTimeout(timer);
+      btn.textContent = 'Message Sent ✓'; btn.style.background = '#25D366';
+      form.reset();
+      setTimeout(reset, 3200);
+    });
+  }
+  wireEmailForm(document.getElementById('inspectionForm'), document.getElementById('inspectionFrame'));
+  wireEmailForm(document.getElementById('contactPageForm'), document.getElementById('contactFrame'));
+
+  // Newsletter banner: subscriber goes straight to the Brevo list (same form as the pop-up)
+  (function(){
+    const form = document.getElementById('newsletterForm');
+    if(!form) return;
+    const btn = form.querySelector('button');
+    const original = btn.textContent;
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      btn.disabled = true; btn.textContent = 'Subscribing...';
+      fetch(form.action, { method:'POST', body:new FormData(form), mode:'no-cors' })
+        .then(() => { btn.textContent = 'Subscribed ✓'; btn.style.background = '#25D366'; form.reset(); })
+        .catch(() => { btn.textContent = 'Something went wrong, please try again'; btn.style.background = '#D33'; })
+        .finally(() => { setTimeout(() => { btn.disabled = false; btn.textContent = original; btn.style.background = ''; }, 3500); });
+    });
+  })();
 
   // ---- Newsletter popup ----
   (function(){
